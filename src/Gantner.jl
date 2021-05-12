@@ -1,5 +1,7 @@
 module Gantner
 
+using Dates
+
 export gantnerread, gantnerinfo
 
 """
@@ -125,11 +127,15 @@ numchannels;
 numvalues - per channel;
 fs - sampling rate;
 chanlegendtext - legend text associated with each channel
+starttime - the time the file was created
 """
 function gantnerinfo(filename :: String)
     gClient = gConnection = 0
     try
         gClient, gConnection = gantOpenFile(filename); # open file
+        # obtain file start time
+        global starttime = unix2datetime(ctime(filename))
+
         #read number of channels
         global numchannels = gantChanNumRead(gConnection);
         global numvalues = gantNumSamples(gClient, gConnection)
@@ -145,7 +151,7 @@ function gantnerinfo(filename :: String)
         #close file
         gantCloseFile(gClient, gConnection)
     end
-    return (numchannels, numvalues, fs, chanlegendtext)
+    return (numchannels, numvalues, fs, chanlegendtext, starttime)
 end
 
 end # module

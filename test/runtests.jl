@@ -1,14 +1,15 @@
-using Test, Gantner
+using Test, Gantner, Dates
 
-name = joinpath(@__DIR__, "..\\example", "data.dat")
+name = joinpath(@__DIR__, "..", "example", "data.dat")
 
 @testset "gantnerinfo" begin
     # check gantnerinfo
-    nc, nv, fs, chanlegendtext = gantnerinfo(name)
+    nc, nv, fs, chanlegendtext, starttime = gantnerinfo(name)
     @test nc == 6
     @test nv == 200_000
     @test fs == 10_000.0
     @test chanlegendtext == ["Trig Condition", "DI_01a", "FI_01a", "2nd MUX AI_01", "1st MUX AI_03"]
+    #@test isapprox(starttime, unix2datetime(ctime(name)), atol=1e-3) # isapprox not valid with these types
 end
 
 @testset "gantnerread" begin
@@ -17,7 +18,7 @@ end
     @test t == 0.0:0.0001:19.9999
     @test time[2,5] == 0.001806761370971799
 
-    # check gantnerread where the time is read, rather than recreated
+    # check gantnerread where the sampling time is read, rather than recreated
     (t, time, chanTextLegend) = gantnerread(name; lazytime = false)
     @test t[1] == 44210.79703523496
 
