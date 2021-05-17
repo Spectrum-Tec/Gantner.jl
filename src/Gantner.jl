@@ -16,7 +16,7 @@ include("read_exact.jl")
 
 
 """
-    gantnerread(filename)
+    gantnerread(filename :: String; lazytime :: Bool = true)
 Read all data channels of data in a Gantner *.dat file.
 
 The first channel of the data file is expected to be the time data.  
@@ -26,6 +26,7 @@ If lazytime = true this data will be reconstructed.
 Program returns 
 ti - time of sample;
 data - Array of all the data channels;
+fs - sampling rate [Hz]
 chanlegendtext - the legend text associated with each channel Vector{String}
 
 This is a subset of the read_exact.c which is the base of the read_exact mex
@@ -64,21 +65,22 @@ function gantnerread(filename :: String; lazytime :: Bool = true)
         #close file
         gantCloseFile(gClient, gConnection)
     end
-    return (ti, data, chanlegendtext)
+    return (ti, data, fs, chanlegendtext)
 end
 
 """
-    gantnerread(filename, channel)
+    gantnerread(filename :: String, channel :: Integer; lazytime :: Bool = true)
 Read specified data channel (one channel) of data in a Gantner *.dat file.
 
 The first channel of the data file is expected to be the time data.  
-channel 
+channel - is the channel number to read the data from.  
 If lazytime = false this data will be read and returned as ti.  
 If lazytime = true this data will be reconstructed.
 
 Program returns 
 ti - time of sample;
 data - Array of all the data channels;
+fs - sampling rate [Hz]
 chanlegendtext - the legend text associated with each channel Vector{String}
 
 This is a subset of the read_exact.c which is the base of the read_exact mex
@@ -115,7 +117,7 @@ function gantnerread(filename :: String, channel :: Integer; lazytime :: Bool = 
         #close file
         gantCloseFile(gClient, gConnection)
     end
-    return (ti, data, chanlegendtext)
+    return (ti, data, fs, chanlegendtext)
 end
 
 """
