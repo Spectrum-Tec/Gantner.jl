@@ -79,7 +79,7 @@ If lazytime = true this data will be reconstructed.
 
 Program returns 
 ti - time of sample;
-data - Array of all the data channels;
+data - data in specified channel;
 fs - sampling rate [Hz]
 chanlegendtext - the legend text associated with each channel Vector{String}
 
@@ -157,3 +157,17 @@ function gantnerinfo(filename :: String)
 end
 
 end # module
+
+"""
+
+take the input data which has a digitial tach channel embedded within it.  This will extract the information from the specified bit and return this information.
+Assume data is a Vector{Float64} or Array{Float64,1}
+bit - the bit number from the least significant bit that contains the data
+"""
+function gantnermask(data, bit::Integer)
+    # this has not been tested and may need to review the types of input and outputs
+    dataint = Integer.(data)
+    dataint = dataint & Integer(bit)
+    dataint = dataint >> bit - 1
+    data = Float64.(dataint)
+end
