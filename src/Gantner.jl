@@ -2,7 +2,7 @@ module Gantner
 
 using Dates
 
-export gantnerread, gantnerinfo
+export gantnerread, gantnerinfo, gantnermask
 
 """
 This function implements the read_exact.mex functionality to read a Gantner created .dat file.  
@@ -156,8 +156,6 @@ function gantnerinfo(filename :: String)
     return (numchannels, numvalues, fs, chanlegendtext, starttime)
 end
 
-end # module
-
 """
 
 take the input data which has a digitial tach channel embedded within it.  This will extract the information from the specified bit and return this information.
@@ -165,9 +163,51 @@ Assume data is a Vector{Float64} or Array{Float64,1}
 bit - the bit number from the least significant bit that contains the data
 """
 function gantnermask(data, bit::Integer)
-    # this has not been tested and may need to review the types of input and outputs
-    dataint = Integer.(data)
-    dataint = dataint & Integer(bit)
-    dataint = dataint >> bit - 1
-    data = Float64.(dataint)
+    datanew = typeof(data)(undef,size(data))
+    for (i, x) in enumerate(data)
+        x = Integer(x) & Integer(bit)
+        x = x >> (bit - 1)
+        datanew[i] = x
+    end
+    return datanew
 end
+
+
+"""
+
+take the input data which has a digitial tach channel embedded within it.  This will extract the information from the specified bit and return this information.
+Assume data is a Vector{Float64} or Array{Float64,1}
+bit - the bit number from the least significant bit that contains the data
+pprdivide - the tach pulse divide by ratio
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+"""
+function gantnermask(data, bit::Integer, pprdivide::Integer)
+    datanew = typeof(data)(undef,size(data))
+    datanew[1] = xnew = Bool(0)
+    count = 0
+
+    x = Integer(data[1]) & Integer(bit)   # perform masking
+    xi = Bool(x >> (bit - 1))             # shift bit to LSB
+    println(xi)
+
+    for (i, x) in enumerate(data[2:end])
+        xi_1 = xi
+        x = Integer(x) & Integer(bit)   # perform masking
+        xi = Bool(x >> (bit - 1))       # shift bit to LSB
+        println(i, "\t", x, "\t", xi, "\t", xi_1)
+        # check for trigger
+        if xor(xi, xi_1)
+            count += 1
+            @show(count)
+            if count == pprdivide
+                xnew = !xnew
+                count = 0
+            end
+        end
+        datanew[i+1] = xnew
+    end
+    return datanew
+end
+
+end # module

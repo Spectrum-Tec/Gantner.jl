@@ -28,3 +28,16 @@ end
     @test length(time) == 200_000
     @test time[5] == -0.004325194749981165
 end
+
+@testset "gantnermask" begin
+    a = [0.0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3,0,3]
+    b = gantnermask(a,2)
+    @test typeof(a) == typeof(b)
+    @test all(a .>= b)
+    @test all(a .== 3 .* b)
+    @test all(gantnermask(a, 2) .== gantnermask(a, 1))
+    c = gantnermask(a,1,1)
+    @test all(b .== c)
+    @test all(gantnermask(a, 2, 5) .== gantnermask(a, 1, 5))
+    @test all(gantnermask(a, 2, 3) .== repeat(0:1, inner=3, outer=6))
+end
