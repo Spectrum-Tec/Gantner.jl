@@ -189,17 +189,17 @@ function gantnermask(data, bit::Integer, pprdivide::Integer)
 
     x = Integer(data[1]) & Integer(bit)   # perform masking
     xi = Bool(x >> (bit - 1))             # shift bit to LSB
-    println(xi)
+    # println(xi)
 
-    for (i, x) in enumerate(data[2:end])
+    for (i, x) in enumerate(data[begin+1:end])
         xi_1 = xi
         x = Integer(x) & Integer(bit)   # perform masking
         xi = Bool(x >> (bit - 1))       # shift bit to LSB
-        println(i, "\t", x, "\t", xi, "\t", xi_1)
+        # println(i, "\t", x, "\t", xi, "\t", xi_1)
         # check for trigger
         if xor(xi, xi_1)
             count += 1
-            @show(count)
+            # @show(count)
             if count == pprdivide
                 xnew = !xnew
                 count = 0
