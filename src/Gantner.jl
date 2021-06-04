@@ -157,7 +157,7 @@ function gantnerinfo(filename :: String)
 end
 
 """
-
+    gantnermask(data, bit::Integer)
 take the input data which has a digitial tach channel embedded within it.  This will extract the information from the specified bit and return this information.
 Assume data is a Vector{Float64} or Array{Float64,1}
 bit - the bit number from the least significant bit that contains the data
@@ -174,7 +174,7 @@ end
 
 
 """
-
+    gantnermask(data, bit::Integer, pprdivide::Integer)
 take the input data which has a digitial tach channel embedded within it.  This will extract the information from the specified bit and return this information.
 Assume data is a Vector{Float64} or Array{Float64,1}
 bit - the bit number from the least significant bit that contains the data
