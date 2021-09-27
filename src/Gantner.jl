@@ -21,7 +21,7 @@ Read all data channels of data in a Gantner *.dat file.
 
 The first channel of the data file is expected to be the time data.  
 If lazytime = false this data will be read and returned as ti.  
-If lazytime = true this data will be reconstructed.
+If lazytime = true this data will be reconstructed  (The default)
 
 Program returns 
 ti - time of sample;
