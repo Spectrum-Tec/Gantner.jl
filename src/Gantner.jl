@@ -179,8 +179,6 @@ take the input data which has a digitial tach channel embedded within it.  This 
 Assume data is a Vector{Float64} or Array{Float64,1}
 bit - the bit number from the least significant bit that contains the data
 pprdivide - the tach pulse divide by ratio
- _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 """
 function gantnermask(data, bit::Integer, pprdivide::Integer)
     datanew = typeof(data)(undef,size(data))
