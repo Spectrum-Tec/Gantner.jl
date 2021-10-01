@@ -40,4 +40,27 @@ end
     @test all(b .== c)
     @test all(gantnermask(a, 2, 5) .== gantnermask(a, 1, 5))
     @test all(gantnermask(a, 2, 3) .== repeat(0:1, inner=3, outer=6))
+
+    c = [0.0, 1, 2, 4, 8, 16, 32]
+    @test all(gantnermask(c, 1) .== [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 2) .== [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 3) .== [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 4) .== [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+    @test all(gantnermask(c, 5) .== [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+    @test all(gantnermask(c, 6) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+    @test all(gantnermask(c, 7) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 8) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 9) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 10) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    
+    @test all(gantnermask(c, 1, 1) .== [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 2, 1) .== [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 3, 1) .== [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 4, 1) .== [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+    @test all(gantnermask(c, 5, 1) .== [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+    @test all(gantnermask(c, 6, 1) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+    @test all(gantnermask(c, 7, 1) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 8, 1) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 9, 1) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    @test all(gantnermask(c, 10, 1) .== [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 end
