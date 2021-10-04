@@ -13,7 +13,7 @@ using Gantner
 
 # load file data
 name = joinpath(@__DIR__, "data.dat")
-(t, time, chanTextLegend) = gantnerread(name)
+(t, time, fs, chanTextLegend) = gantnerread(name)
 # t = range(0, length=size(Time, 1), step=1/fs)
 
 plotly()       # use for general purpose plotting and looking for peaks

@@ -37,27 +37,27 @@ function gantnerread(filename :: String; lazytime :: Bool = true)
     try
         gClient, gConnection = gantOpenFile(filename); # open file
         #read number of channels
-        numchannels = gantChanNumRead(gConnection);
+        numchannels = gantChanNumRead(gConnection) - 1;
         numvalues = gantNumSamples(gClient, gConnection)
 
         global fs = gantSampleRate(gConnection);
-        global chanlegendtext = Vector{String}(undef, numchannels-1)
+        global chanlegendtext = Vector{String}(undef, numchannels)
         # global data = zeros(Float64, numvalues, numchannels-1)
-        global data = Array{Float64}(undef, numvalues, numchannels-1)
+        global data = Array{Float64}(undef, numvalues, numchannels)
         if lazytime
             global ti = range(0, step = 1.0/fs, length = numvalues)
         else
             global ti = gantChanDataRead(gClient, gConnection, 1) # time data assumed in column 1
         end
 
-        for i=2:numchannels
+        for i=1:numchannels
             #read channel name
-            chanlegendtext[i-1] = gantChanName(gConnection, i)
+            chanlegendtext[i] = gantChanName(gConnection, i+1)
 
             #read channel data
-            datachuck = gantChanDataRead(gClient, gConnection, i)
+            datachuck = gantChanDataRead(gClient, gConnection, i+1)
             for (j, value) in enumerate(datachuck)
-                global data[j, i-1] = value;
+                global data[j, i] = value;
             end
         end
 
@@ -91,7 +91,7 @@ function gantnerread(filename :: String, channel :: Integer; lazytime :: Bool = 
     try
         gClient, gConnection = gantOpenFile(filename); # open file
         #read number of channels
-        numchannels = gantChanNumRead(gConnection);
+        numchannels = gantChanNumRead(gConnection) - 1;
         numvalues = gantNumSamples(gClient, gConnection)
 
         global fs = gantSampleRate(gConnection);
@@ -105,10 +105,10 @@ function gantnerread(filename :: String, channel :: Integer; lazytime :: Bool = 
         end
 
         #read channel name
-        chanlegendtext = gantChanName(gConnection, channel)
+        chanlegendtext = gantChanName(gConnection, channel + 1)
 
         #read channel data
-        datachuck = gantChanDataRead(gClient, gConnection, channel)
+        datachuck = gantChanDataRead(gClient, gConnection, channel + 1)
         for (j, value) in enumerate(datachuck)
             global data[j] = value;
         end
@@ -125,35 +125,40 @@ end
 Read the information in a Gantner *.dat file.
 
 Returns 
-numchannels;
+numchannels (We only count the data not the time Vector in the .dat file);
 numvalues - per channel;
 fs - sampling rate;
 chanlegendtext - legend text associated with each channel
-starttime - the time the file was created
+starttime - finish time - length of recording
+finishtime - the timestamp when the file was created (last written)
 """
 function gantnerinfo(filename :: String)
     gClient = gConnection = 0
     try
         gClient, gConnection = gantOpenFile(filename); # open file
-        # obtain file start time
-        global starttime = unix2datetime(ctime(filename))
+        # obtain file start & finish time
+        global finishtime = unix2datetime(ctime(filename))
 
         #read number of channels
-        global numchannels = gantChanNumRead(gConnection);
+        global numchannels = gantChanNumRead(gConnection) - 1;
         global numvalues = gantNumSamples(gClient, gConnection)
 
         global fs = gantSampleRate(gConnection);
-        global chanlegendtext = Vector{String}(undef, numchannels-1)
-        for i=2:numchannels
+        global chanlegendtext = Vector{String}(undef, numchannels)
+        for i=1:numchannels
             #read channel name
-            chanlegendtext[i-1] = gantChanName(gConnection, i)
+            chanlegendtext[i] = gantChanName(gConnection, i + 1)
         end
+
+        # obtain file start & finish time
+        global finishtime = unix2datetime(ctime(filename))
+        global starttime = finishtime - Dates.Second( numvalues/fs)
 
     finally
         #close file
         gantCloseFile(gClient, gConnection)
     end
-    return (numchannels, numvalues, fs, chanlegendtext, starttime)
+    return (numchannels, numvalues, fs, chanlegendtext, starttime, finishtime)
 end
 
 """
