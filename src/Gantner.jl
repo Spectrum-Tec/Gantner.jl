@@ -72,8 +72,7 @@ end
     gantnerread(filename :: String, channel :: Integer; lazytime :: Bool = true)
 Read specified data channel (one channel) of data in a Gantner *.dat file.
 
-The first channel of the data file is expected to be the time data.  
-channel - is the channel number to read the data from.  
+channel - is the channel number to read the data from.  When channel is 0 the gantner time data is returned.
 If lazytime = false this data will be read and returned as ti.  
 If lazytime = true this data will be reconstructed.
 
