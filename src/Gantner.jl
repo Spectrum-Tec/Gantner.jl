@@ -33,13 +33,23 @@ chanlegendtext - the legend text associated with each channel Vector{String}
 This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
-function gantnerread(filename::String; scale::AbstractFloat = 1.0, lazytime::Bool = true)
+function gantnerread(filename::String; scale::Vector{<:Float64} = ones(Float64, 1), lazytime::Bool = true)
     gClient = gConnection = 0
     try
         gClient, gConnection = gantOpenFile(filename); # open file
         #read number of channels
         numchannels = gantChanNumRead(gConnection) - 1;
         numvalues = gantNumSamples(gClient, gConnection)
+
+        # if scale has one element && equal to one then no scale passed in and make Vector of length 'numchannels'
+        if length(scale) == 1 && scale == ones(Float64, 1)
+            scale = ones(Float64, numchannels)
+        end
+
+        # check to see is scale is the same length at the number of channels
+        if length(scale) != numchannels
+            error("Data has $numchannels channels, ensure scale is a $numchannels vector")
+        end
 
         global fs = gantSampleRate(gConnection);
         global chanlegendtext = Vector{String}(undef, numchannels)
@@ -58,7 +68,7 @@ function gantnerread(filename::String; scale::AbstractFloat = 1.0, lazytime::Boo
             #read channel data
             datachuck = gantChanDataRead(gClient, gConnection, i+1)
             for (j, value) in enumerate(datachuck)
-                global data[j, i] = scale * value;
+                global data[j, i] = scale[i] * value;
             end
         end
 
@@ -92,13 +102,13 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
     gClient = gConnection = 0
     try
         gClient, gConnection = gantOpenFile(filename); # open file
+        
         #read number of channels
         numchannels = gantChanNumRead(gConnection) - 1;
         numvalues = gantNumSamples(gClient, gConnection)
 
         global fs = gantSampleRate(gConnection);
         global chanlegendtext = Vector{String}(undef, 1)
-        # global data = zeros(Float64, numvalues, 1)
         global data = Vector{Float64}(undef, numvalues)
         if lazytime
             global ti = range(0, step = 1.0/fs, length = numvalues)

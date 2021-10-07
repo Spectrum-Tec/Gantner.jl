@@ -14,19 +14,25 @@ end
 
 @testset "gantnerread" begin
     #check gantnerread for all channels
-    (t, time, fs, chanTextLegend) = gantnerread(name)
+    (t, data, fs, chanTextLegend) = gantnerread(name)
     @test t == 0.0:0.0001:19.9999
-    @test time[2,5] == 0.001806761370971799
+    @test data[2,5] == 0.001806761370971799
+
+    #check gantnerread for all channels with scaling
+    scalefactors = [1.0; 2.0; 3.0; 4.0; 5.0]
+    (t, data, fs, chanTextLegend) = gantnerread(name, scale=scalefactors)
+    @test t == 0.0:0.0001:19.9999
+    @test data[2,5] == 5.0 * 0.001806761370971799
 
     # check gantnerread where the sampling time is read, rather than recreated
-    (t, time, fs, chanTextLegend) = gantnerread(name; lazytime = false)
+    (t, data, fs, chanTextLegend) = gantnerread(name; lazytime = false)
     @test t[1] == 44210.79703523496
 
-    # check gantnerread, where only one channel is read
-    (t, time, fs, chanTextLegend) = gantnerread(name, 5)
-    @test typeof(time) == Vector{Float64}
-    @test length(time) == 200_000
-    @test time[5] == -0.004325194749981165
+    # check gantnerread, where only one channel is read and scale factor is used
+    (t, data, fs, chanTextLegend) = gantnerread(name, 5, scale=2.0)
+    @test typeof(data) == Vector{Float64}
+    @test length(data) == 200_000
+    @test data[5] == 2 * -0.004325194749981165
 end
 
 @testset "gantnermask" begin
