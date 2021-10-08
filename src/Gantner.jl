@@ -20,7 +20,8 @@ include("read_exact.jl")
 Read all data channels of data in a Gantner *.dat file.
 
 The first channel of the .dat file is time data. This is ignored by default and returned in ti if lazytime=false.
-scale - convert data in volts in .dat file to EU
+scale - convert data in volts in .dat file to EU. If it is a scaler then use for all channels, otherwise if vector 
+            it must be the length of the number of channels
 If lazytime = false this data will be read and returned as ti.  
 If lazytime = true this data will be reconstructed  (The default)
 
@@ -33,7 +34,7 @@ chanlegendtext - the legend text associated with each channel Vector{String}
 This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
-function gantnerread(filename::String; scale::Vector{<:Float64} = ones(Float64, 1), lazytime::Bool = true)
+function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} = 1.0, lazytime::Bool = true)
     gClient = gConnection = 0
     try
         gClient, gConnection = gantOpenFile(filename); # open file
@@ -41,9 +42,9 @@ function gantnerread(filename::String; scale::Vector{<:Float64} = ones(Float64, 
         numchannels = gantChanNumRead(gConnection) - 1;
         numvalues = gantNumSamples(gClient, gConnection)
 
-        # if scale has one element && equal to one then no scale passed in and make Vector of length 'numchannels'
-        if length(scale) == 1 && scale == ones(Float64, 1)
-            scale = ones(Float64, numchannels)
+        # If typeof scale is Float64 or length is 1 then apply this factor to all channels
+        if typeof(scale) == Float64  || length(scale) == 1
+            scale = scale * ones(Float64, numchannels)
         end
 
         # check to see is scale is the same length at the number of channels

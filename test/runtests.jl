@@ -18,13 +18,19 @@ end
     @test t == 0.0:0.0001:19.9999
     @test data[2,5] == 0.001806761370971799
 
-    #check gantnerread for all channels with scaling
+    #check gantnerread for all channels with scaling array
     scalefactors = [1.0; 2.0; 3.0; 4.0; 5.0]
     (t, data, fs, chanTextLegend) = gantnerread(name, scale=scalefactors)
     @test t == 0.0:0.0001:19.9999
     @test data[2,5] == 5.0 * 0.001806761370971799
 
-    # check gantnerread where the sampling time is read, rather than recreated
+    #check gantnerread for all channels with scaling Float64
+    scalefactors = 5.0
+    (t, data, fs, chanTextLegend) = gantnerread(name, scale=scalefactors)
+    @test t == 0.0:0.0001:19.9999
+    @test data[2,5] == 5.0 * 0.001806761370971799
+
+# check gantnerread where the sampling time is read, rather than recreated
     (t, data, fs, chanTextLegend) = gantnerread(name; lazytime = false)
     @test t[1] == 44210.79703523496
 
