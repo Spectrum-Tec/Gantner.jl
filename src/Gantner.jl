@@ -162,7 +162,7 @@ function gantnerinfo(filename :: String)
         end
 
         # obtain file start & finish time
-        global finishtime = unix2datetime(ctime(filename))
+        global finishtime = unix2datetime(ctime(filename) + (datetime2unix(now()) - datetime2unix(now(UTC))))
         global starttime = finishtime - Dates.Second(round(Int64, numvalues/fs))
 
     finally
