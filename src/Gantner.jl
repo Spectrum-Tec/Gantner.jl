@@ -3,17 +3,15 @@ module Gantner
 using Dates
 
 export gantnerread, gantnerinfo, gantnermask
+include("read_exact.jl")
 
-"""
+#=
 This function implements the read_exact.mex functionality to read a Gantner created .dat file.  
 It utilizes the Julia ccall command to use the functionality of the giutility.dll file.  As this
 is a windows specific file, this utility only works for Windows operating system.
 
 Additional read_exact.mex functionality can be added as required
-"""
-
-include("read_exact.jl")
-
+=#
 
 """
     gantnerread(filename :: String; scale :: Real = 1.0, lazytime :: Bool = true)
@@ -81,6 +79,79 @@ function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} =
 end
 
 """
+    gantnerread(filename :: String; channel:: AbstractVector{Int}, scale :: Real = 1.0, lazytime :: Bool = true)
+
+Read specified data channels of data in a Gantner *.dat file.
+
+The first channel of the .dat file is time data. This is ignored by default and returned in ti if lazytime=false.
+channel - the data channels to read
+scale - convert data in volts in .dat file to EU. If it is a scaler then use for all channels, otherwise if vector 
+            it must be the length(channel)
+If lazytime = false this data will be read and returned as ti.  
+If lazytime = true this data will be reconstructed  (The default)
+
+Program returns 
+ti - time of sample;
+data - Array of all the data channels;
+fs - sampling rate [Hz]
+chanlegendtext - the legend text associated with each channel Vector{String}
+
+This is a subset of the read_exact.c which is the base of the read_exact mex
+file used for matlab.  This subset is only for reading data from a file.
+"""
+function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Union{Vector{<:Float64},Float64} = 1.0, lazytime::Bool = true)
+    gClient = gConnection = 0
+    try
+        gClient, gConnection = gantOpenFile(filename); # open file
+        #read number of channels
+        numchannels = length(channel)
+        numchanneldat = gantChanNumRead(gConnection) - 1;
+        numvalues = gantNumSamples(gClient, gConnection)
+
+        # ensure the specified channels are in the data file
+        if !issubset(channel, 1:numchanneldat)
+            error("Specified channel(s) not in data file")
+        end
+
+        # If typeof scale is Float64 or length is 1 then apply this factor to all channels
+        if typeof(scale) == Float64  || length(scale) == 1
+            scale = scale * ones(Float64, numchannels)
+        end
+
+        # check to see is scale is the same length at the number of channels
+        if length(scale) != numchannels
+            error("Data has $numchannels channels, ensure scale is a $numchannels vector")
+        end
+
+        global fs = gantSampleRate(gConnection);
+        global chanlegendtext = Vector{String}(undef, numchannels)
+        # global data = zeros(Float64, numvalues, numchannels-1)
+        global data = Array{Float64}(undef, numvalues, numchannels)
+        if lazytime
+            global ti = range(0, step = 1.0/fs, length = numvalues)
+        else
+            global ti = gantChanDataRead(gClient, gConnection, 1) # time data assumed in column 1
+        end
+
+        for (i, ii) in enumerate(channel)
+            #read channel name
+            chanlegendtext[i] = gantChanName(gConnection, ii+1)
+
+            #read channel data
+            datachuck = gantChanDataRead(gClient, gConnection, ii+1)
+            for (j, value) in enumerate(datachuck)
+                global data[j, i] = scale[i] * value;
+            end
+        end
+
+    finally
+        #close file
+        gantCloseFile(gClient, gConnection)
+    end
+    return (ti, data, fs, chanlegendtext)
+end
+
+"""
     gantnerread(filename :: String, channel :: Integer; scale :: Real = 1.0, lazytime :: Bool = true)
 Read specified data channel (one channel) of data in a Gantner *.dat file.
 
@@ -105,8 +176,13 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
         gClient, gConnection = gantOpenFile(filename); # open file
         
         #read number of channels
-        numchannels = gantChanNumRead(gConnection) - 1;
+        numchanneldat = gantChanNumRead(gConnection) - 1;
         numvalues = gantNumSamples(gClient, gConnection)
+
+        # ensure the specified channels are in the data file
+        if !issubset(channel, 1:numchanneldat)
+            error("Specified channel not in data file")
+        end
 
         global fs = gantSampleRate(gConnection);
         global chanlegendtext = Vector{String}(undef, 1)
@@ -162,7 +238,7 @@ function gantnerinfo(filename :: String)
         end
 
         # obtain file start & finish time
-        # note that ctime is the time the file was created on the local file system
+        # note that ctime is the local time the file was created on the local file system
         global finishtime = unix2datetime(ctime(filename) + (datetime2unix(now()) - datetime2unix(now(UTC))))
         global starttime = finishtime - Dates.Second(round(Int64, numvalues/fs))
 

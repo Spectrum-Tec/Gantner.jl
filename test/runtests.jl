@@ -30,7 +30,7 @@ end
     @test t == 0.0:0.0001:19.9999
     @test data[2,5] == 5.0 * 0.001806761370971799
 
-# check gantnerread where the sampling time is read, rather than recreated
+    # check gantnerread where the sampling time is read, rather than recreated
     (t, data, fs, chanTextLegend) = gantnerread(name; lazytime = false)
     @test t[1] == 44210.79703523496
 
@@ -39,6 +39,12 @@ end
     @test typeof(data) == Vector{Float64}
     @test length(data) == 200_000
     @test data[5] == 2 * -0.004325194749981165
+
+    # check gantnerread, where a number of channels are read and scale factor is used
+    (t, data, fs, chanTextLegend) = gantnerread(name, 2:4, scale=2.0)
+    @test typeof(data) == Matrix{Float64}
+    @test size(data) == (200_000, 3)
+    @test data[5,3] == 0.028291847556829453
 end
 
 @testset "gantnermask" begin
