@@ -178,7 +178,8 @@ function gantChanDataRead(HCLIENT::Integer, HCONNECTION::Integer, channelindex::
     if numValues == 0
         error("No Data in file...")
     end
-    Data = zeros(numValues)
+    # Data = zeros(numValues)
+    Data = Vector{Float64}(undef, numValues)
 
     frameSize = Ref{Int32}(0)
     ret = ccall((:_CD_eGateHighSpeedPort_LoadBufferData, giutility),

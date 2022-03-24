@@ -40,6 +40,14 @@ end
     @test length(data) == 200_000
     @test data[5] == 2 * -0.004325194749981165
 
+    # check gantnerread, where only one channel is read and scale factor is used
+    tl = Timelimits(5.0, 15.0)
+    (t, data, fs, chanTextLegend) = gantnerread(name, 5, scale=2.0, tl=tl)
+    @test length(t) == 100_001
+    @test typeof(data) == Vector{Float64}
+    @test length(data) == 100_001
+    @test data[5] == 0.012449117377400398
+
     # check gantnerread, where a number of channels are read and scale factor is used
     (t, data, fs, chanTextLegend) = gantnerread(name, 2:4, scale=2.0)
     @test typeof(data) == Matrix{Float64}
