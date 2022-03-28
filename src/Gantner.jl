@@ -1,6 +1,7 @@
 module Gantner
 
 using Dates
+#using Infiltrator
 
 export gantnerread, gantnerinfo, gantnermask, Timelimits
 include("read_exact.jl")
@@ -70,10 +71,11 @@ function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} =
             chanlegendtext[i] = gantChanName(gConnection, i+1)
 
             #read channel data
-            datachuck = gantChanDataRead(gClient, gConnection, i+1)
-            for (j, value) in enumerate(datachuck)
-                global data[j, i] = scale[i] * value;
-            end
+            global data[:,i] = gantChanDataRead(gClient, gConnection, i+1)
+            #for (j, value) in enumerate(data)
+            #    global data[j, i] = scale[i] * value;
+            #end
+            global data[:,i] .*= scale[i]
         end
 
     finally
@@ -143,10 +145,11 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
             chanlegendtext[i] = gantChanName(gConnection, ii+1)
 
             #read channel data
-            data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)
-            for (j, value) in enumerate(data[:,i])
-                global data[j, i] = scale[i] * value;
-            end
+            global data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)
+            #for (j, value) in enumerate(data[:,i])
+            #    global data[j, i] = scale[i] * value;
+            #end
+            global data[:,i] .*= scale[i]
         end
 
     finally
@@ -157,7 +160,7 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
 end
 
 """
-    gantnerread(filename :: String, channel :: Integer; scale :: Real = 1.0, lazytime :: Bool = true)
+gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Timelimits,Nothing}=nothing, lazytime::Bool = true)
 Read specified data channel (one channel) of data in a Gantner *.dat file.
 
 channel - is the channel number to read the data from.  When channel is 0 the gantner time data is returned in data.
@@ -178,6 +181,7 @@ file used for matlab.  This subset is only for reading data from a file.
 """
 function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Timelimits,Nothing}=nothing, lazytime::Bool = true)
     gClient = gConnection = 0
+
     try
         gClient, gConnection = gantOpenFile(filename); # open file
         
@@ -222,9 +226,15 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
         chanlegendtext = gantChanName(gConnection, channel + 1)
 
         #read channel data
+        # using @view in the following line saves half the memory but creates a SubArray (not sure of the implications)
         global data = gantChanDataRead(gClient, gConnection, channel + 1)[indexst:indexfin]
-        @inbounds for (j, value) in enumerate(data)
-            global data[j] = scale * value;
+        # @infiltrate
+        if scale != 1.0
+            # the for loop should be faster than broadcasting but I think the global slows it down
+            #@inbounds for (j, value) in enumerate(data)
+            #    global data[j] = scale * value;
+            #end
+            global data .*= scale
         end
         
     finally
