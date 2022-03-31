@@ -12,6 +12,9 @@ It utilizes the Julia ccall command to use the functionality of the giutility.dl
 is a windows specific file, this utility only works for Windows operating system.
 
 Additional read_exact.mex functionality can be added as required
+
+Optional partial data reads has been implemented for single channel reads.  Use this as a base
+for adding this capability for all channel or multiple channel reading of data if required.
 =#
 
 struct Timelimits
