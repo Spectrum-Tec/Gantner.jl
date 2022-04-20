@@ -294,12 +294,12 @@ Assume data is a Vector{Float64} or Array{Float64,1}
 bit - the bit number from the least significant bit that contains the data
 """
 function gantnermask(data::Vector{Float64}, bit::Integer)
-    mask = one(Int) << (bit - 1)
+    mask = one(UInt) << (bit - 1)
     # @show(mask)
     datanew = typeof(data)(undef,size(data))
     for (i, x) in enumerate(data)
         # @show(i, x, bitstring(Int(x)))
-        x = Int(x) & mask
+        x = UInt(x) & mask
         x = x >> (bit - 1)
         datanew[i] = x
         # @show(x, Float64(x), datanew[i])
@@ -316,19 +316,19 @@ bit - the bit number from the least significant bit that contains the data
 pprdivide - the tach pulse divide by ratio
 """
 function gantnermask(data::Vector{Float64}, bit::Integer, pprdivide::Integer)
-    mask = one(Int) << (bit - 1)
+    mask = one(UInt) << (bit - 1)
     datanew = typeof(data)(undef,size(data))
     datanew[1] = xnew = Bool(0)
     count = 0
 
-    x = Int(data[1]) & mask   # perform masking
-    xi = Bool(x >> (bit - 1))             # shift bit to LSB
+    x = UInt(data[1]) & mask        # perform masking
+    xi = Bool(x >> (bit - 1))       # shift bit to LSB
     # println(xi)
 
     for (i, x) in enumerate(data[begin+1:end])
         xi_1 = xi
-        x = Int(x) & mask   # perform masking
-        xi = Bool(x >> (bit - 1))       # shift bit to LSB
+        x = UInt(x) & mask          # perform masking
+        xi = Bool(x >> (bit - 1))   # shift bit to LSB
         # println(i, "\t", x, "\t", xi, "\t", xi_1)
         # check for trigger
         if xor(xi, xi_1)

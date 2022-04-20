@@ -60,7 +60,7 @@ function gantCloseFile(HCLIENT::Integer, HCONNECTION::Integer)
 
     # @show(HCONNECTION, channelCount, ret)
 
-  if ret != 0
+  if ret != zero(Int32)
     error("Channel numbers not read, Return Code $ret")
   end
   return HCLIENT[], HCONNECTION[]
@@ -72,7 +72,7 @@ Get the number of channels
 """
 function gantChanNumRead(HCONNECTION::Integer)
 
-    DADI_INPUT = 0   # input channels
+    DADI_INPUT = zero(Int32)        # input channels
     channelCount = Ref{Int32}(0)
 
     ret = ccall((:_CD_eGateHighSpeedPort_GetNumberOfChannels, giutility),
@@ -80,7 +80,7 @@ function gantChanNumRead(HCONNECTION::Integer)
 
     # @show(HCONNECTION, channelCount, ret)
 
-  if ret != 0
+  if ret != zero(Int32)
     error("Channel numbers not read, Return Code $ret")
   end
   return channelCount[]
@@ -112,7 +112,7 @@ function gantSampleRate(HCONNECTION::Integer)
 
     # @show(HCONNECTION, fs, channelInfo, ret)
 
-  if ret != 0
+  if ret != zero(Int32)
     error("Channel sample rate not read, Return Code $ret")
   end
   return fs[]
@@ -124,8 +124,8 @@ Get the channel name
 """
 function gantChanName(HCONNECTION::Integer, channelindex::Integer)
 
-    CHINFO_NAME = 0  # type of info = name
-    DADI_INPUT = 0   # input channels
+    CHINFO_NAME = zero(Int32)  # type of info = name
+    DADI_INPUT = zero(Int32)   # input channels
     info = Vector{UInt8}(undef, 1024)  # initialize info
 
     ret = ccall((:_CD_eGateHighSpeedPort_GetChannelInfo_String, giutility),
@@ -134,7 +134,7 @@ function gantChanName(HCONNECTION::Integer, channelindex::Integer)
 
     # @show(HCONNECTION, channelindex, info, ret)
 
-  if ret != 0
+  if ret != zero(Int32)
     error("Channel sample rate not read, Return Code $ret")
   end
   return unsafe_string(pointer(info))
@@ -175,7 +175,7 @@ function gantChanDataRead(HCLIENT::Integer, HCONNECTION::Integer, channelindex::
     Cint, (Cint, Cint), HCONNECTION, HCLIENT)
     #@show(numValues)
 
-    if numValues == 0
+    if numValues == zero(Int32)
         error("No Data in file...")
     end
     # Data = zeros(numValues)
