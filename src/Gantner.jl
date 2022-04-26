@@ -216,6 +216,7 @@ This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
 function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Timelimits,Nothing}=nothing, lazytime::Bool = true)
+    # if tl = nothing then all the data is returned
     gClient = gConnection = 0
     fs = 0.0
     chanlegendtext = ""
@@ -235,16 +236,15 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
             error("Specified channel not in data file")
         end
 
-        if lazytime
-            ti = range(0.0, step = 1.0/fs, length = numvaluesinfile)
-        else
-            ti = gantChanDataRead(gClient, gConnection, 1) # time data in column 1
-        end
-
         if tl === nothing  # all data in file
             indexst = 1
             indexfin = numvaluesinfile
             numvalues = numvaluesinfile
+            if lazytime
+                ti = range(0.0, step = 1.0/fs, length = numvaluesinfile)
+            else
+                ti = gantChanDataRead(gClient, gConnection, 1) # time data in column 1
+            end
         else
             if lazytime  # simple fast calculation
                 indexst = ceil(Int, tl.st * fs)

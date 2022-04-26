@@ -51,6 +51,8 @@ end
     @test length(t) == 100_001
     @test typeof(data) == Vector{Float64}
     @test length(data) == 100_001
+    @test t[begin] == tl.st
+    @test t[end] == tl.fin
     @test data[5] ≈ 0.012449117377400398
     @test chanlegendtext == "1st MUX AI_03"
     
