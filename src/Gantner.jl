@@ -22,6 +22,33 @@ struct Timelimits
     fin::Float64
 end
 
+# MWE for initializing variables to get rid of globals
+function trial()
+# initialize variables
+fs = 0.0
+ti = AbstractVector{Float64}
+data = Vector{Float64}
+
+try
+    # open file to read
+    numvalues = rand(100:200, 1)[1]  # number of values from file
+    fs = 512.0  # read from file
+
+    if rand(1:2,1)[1] == 1
+        ti = range(0, step=1/fs, length=numvalues) # generate lazy values
+    else
+        ti = collect(range(0, step=1/fs, length=numvalues)) # read actual values from file
+    end
+
+    data = rand(numvalues)
+finally 
+    #close file
+end
+return ti, data, fs
+end
+
+
+
 """
     gantnerread(filename :: String; scale :: Real = 1.0, lazytime :: Bool = true)
 Read all data channels of data in a Gantner *.dat file.
@@ -43,44 +70,46 @@ file used for matlab.  This subset is only for reading data from a file.
 """
 function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} = 1.0, lazytime::Bool = true)
     gClient = gConnection = 0
+    fs = 0.0
+    chanlegendtext = Vector{String}()
+    ti = AbstractVector{Float64}
+    data = Array{Float64}
     try
-        gClient, gConnection = gantOpenFile(filename); # open file
-        #read number of channels
-        numchannels = gantChanNumRead(gConnection) - 1;
-        numvalues = gantNumSamples(gClient, gConnection)
+    gClient, gConnection = gantOpenFile(filename); # open file
+    #read number of channels
+    numchannels = gantChanNumRead(gConnection) - 1;
+    numvalues = gantNumSamples(gClient, gConnection)
 
-        # If typeof scale is Float64 or length is 1 then apply this factor to all channels
-        if typeof(scale) == Float64  || length(scale) == 1
-            scale = scale * ones(Float64, numchannels)
-        end
+    # If typeof scale is Float64 or length is 1 then apply this factor to all channels
+    if typeof(scale) == Float64  || length(scale) == 1
+        scale = scale * ones(Float64, numchannels)
+    end
 
-        # check to see is scale is the same length at the number of channels
-        if length(scale) != numchannels
-            error("Data has $numchannels channels, ensure scale is a $numchannels vector")
-        end
+    # check to see is scale is the same length at the number of channels
+    if length(scale) != numchannels
+        error("Data has $numchannels channels, ensure scale is a $numchannels vector")
+    end
 
-        global fs = gantSampleRate(gConnection);
-        global chanlegendtext = Vector{String}(undef, numchannels)
-        # global data = zeros(Float64, numvalues, numchannels-1)
-        global data = Array{Float64}(undef, numvalues, numchannels)
-        if lazytime
-            global ti = range(0, step = 1.0/fs, length = numvalues)
-        else
-            global ti = gantChanDataRead(gClient, gConnection, 1) # time data assumed in column 1
-        end
+    fs = gantSampleRate(gConnection);
+    # global data = zeros(Float64, numvalues, numchannels-1)
+    data = Array{Float64}(undef, numvalues, numchannels)
+    if lazytime
+        ti = range(0, step = 1.0/fs, length = numvalues)
+    else
+        ti = gantChanDataRead(gClient, gConnection, 1) # time data assumed in column 1
+    end
 
-        for i=1:numchannels
-            #read channel name
-            chanlegendtext[i] = gantChanName(gConnection, i+1)
-
-            #read channel data
-            global data[:,i] = gantChanDataRead(gClient, gConnection, i+1)
-            #for (j, value) in enumerate(data)
-            #    global data[j, i] = scale[i] * value;
-            #end
-            global data[:,i] .*= scale[i]
-        end
-
+    for i=1:numchannels
+        #read channel name
+        push!(chanlegendtext, gantChanName(gConnection, i+1))
+        #read channel data
+        data[:,i] = gantChanDataRead(gClient, gConnection, i+1)
+        #for (j, value) in enumerate(data)
+        #    global data[j, i] = scale[i] * value;
+        #end
+        data[:,i] .*= scale[i]
+    end
+        
     finally
         #close file
         gantCloseFile(gClient, gConnection)
@@ -111,6 +140,10 @@ file used for matlab.  This subset is only for reading data from a file.
 """
 function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Union{Vector{<:Float64},Float64} = 1.0, lazytime::Bool = true)
     gClient = gConnection = 0
+    fs = 0.0
+    chanlegendtext = Vector{String}()
+    ti = AbstractVector{Float64}
+    data = Array{Float64}
     try
         gClient, gConnection = gantOpenFile(filename); # open file
         #read number of channels
@@ -133,14 +166,14 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
             error("Data has $numchannels channels, ensure scale is a $numchannels vector")
         end
 
-        global fs = gantSampleRate(gConnection);
-        global chanlegendtext = Vector{String}(undef, numchannels)
+        fs = gantSampleRate(gConnection);
+        chanlegendtext = Vector{String}(undef, numchannels)
         # global data = zeros(Float64, numvalues, numchannels-1)
-        global data = Array{Float64}(undef, numvalues, numchannels)
+        data = Array{Float64}(undef, numvalues, numchannels)
         if lazytime
-            global ti = range(0, step = 1.0/fs, length = numvalues)
+            ti = range(0, step = 1.0/fs, length = numvalues)
         else
-            global ti = gantChanDataRead(gClient, gConnection, 1) # time data assumed in column 1
+            ti = gantChanDataRead(gClient, gConnection, 1) # time data assumed in column 1
         end
 
         for (i, ii) in enumerate(channel)
@@ -148,11 +181,11 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
             chanlegendtext[i] = gantChanName(gConnection, ii+1)
 
             #read channel data
-            global data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)
+            data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)
             #for (j, value) in enumerate(data[:,i])
             #    global data[j, i] = scale[i] * value;
             #end
-            global data[:,i] .*= scale[i]
+            data[:,i] .*= scale[i]
         end
 
     finally
@@ -184,14 +217,18 @@ file used for matlab.  This subset is only for reading data from a file.
 """
 function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Timelimits,Nothing}=nothing, lazytime::Bool = true)
     gClient = gConnection = 0
-
+    fs = 0.0
+    chanlegendtext = ""
+    ti = AbstractVector{Float64}
+    data = Array{Float64}
+ 
     try
         gClient, gConnection = gantOpenFile(filename); # open file
         
         #read number of channels
         numchanneldat = gantChanNumRead(gConnection) - 1;
         numvaluesinfile = gantNumSamples(gClient, gConnection)
-        global fs = gantSampleRate(gConnection);
+        fs = gantSampleRate(gConnection);
 
         # ensure the specified channels are in the data file
         if !issubset(channel, 1:numchanneldat)
@@ -199,12 +236,12 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
         end
 
         if lazytime
-            global ti = range(0.0, step = 1.0/fs, length = numvaluesinfile)
+            ti = range(0.0, step = 1.0/fs, length = numvaluesinfile)
         else
-            global ti = gantChanDataRead(gClient, gConnection, 1) # time data in column 1
+            ti = gantChanDataRead(gClient, gConnection, 1) # time data in column 1
         end
 
-        if tl === nothing
+        if tl === nothing  # all data in file
             indexst = 1
             indexfin = numvaluesinfile
             numvalues = numvaluesinfile
@@ -213,31 +250,28 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
                 indexst = ceil(Int, tl.st * fs)
                 indexfin = floor(Int, tl.fin * fs)
                 numvalues = indexfin - indexst + 1
-                global ti = (indexst:indexfin)/fs
+                ti = (indexst:indexfin)/fs
             else  # more complex calcuation
                 indexst = findfirst(tl.st >= ti)
                 indexfin = findfirst(tl.fin >= ti)
                 numvalues = indexfin - indexst + 1
-                global ti = ti[indexst:indexfin]
+                ti = ti[indexst:indexfin]
             end
         end
-
-        global chanlegendtext = Vector{String}(undef, 1)
-        # global data = Vector{Float64}(undef, numvalues)
 
         #read channel name
         chanlegendtext = gantChanName(gConnection, channel + 1)
 
         #read channel data
         # using @view in the following line saves half the memory but creates a SubArray (not sure of the implications)
-        global data = gantChanDataRead(gClient, gConnection, channel + 1)[indexst:indexfin]
+        data = gantChanDataRead(gClient, gConnection, channel + 1)[indexst:indexfin]
         # @infiltrate
         if scale != 1.0
             # the for loop should be faster than broadcasting but I think the global slows it down
             #@inbounds for (j, value) in enumerate(data)
             #    global data[j] = scale * value;
             #end
-            global data .*= scale
+            data .*= scale
         end
         
     finally
@@ -261,24 +295,27 @@ finishtime - the timestamp when the file was created (last written)
 """
 function gantnerinfo(filename :: String)
     gClient = gConnection = 0
+    numchannels = numvalues = 0
+    fs = 0.0
+    chanlegendtext = Vector{String}()
+    starttime = finishtime = unix2datetime(0)
     try
         gClient, gConnection = gantOpenFile(filename); # open file
        
         #read number of channels
-        global numchannels = gantChanNumRead(gConnection) - 1;
-        global numvalues = gantNumSamples(gClient, gConnection)
+        numchannels = gantChanNumRead(gConnection) - 1;
+        numvalues = gantNumSamples(gClient, gConnection)
 
-        global fs = gantSampleRate(gConnection);
-        global chanlegendtext = Vector{String}(undef, numchannels)
+        fs = gantSampleRate(gConnection);
         for i=1:numchannels
             #read channel name
-            chanlegendtext[i] = gantChanName(gConnection, i + 1)
+            push!(chanlegendtext, gantChanName(gConnection, i + 1))
         end
 
         # obtain file start & finish time
         # note that ctime is the local time the file was created on the local file system
-        global finishtime = unix2datetime(ctime(filename) + (datetime2unix(now()) - datetime2unix(now(UTC))))
-        global starttime = finishtime - Dates.Second(round(Int64, numvalues/fs))
+        finishtime = unix2datetime(ctime(filename) + (datetime2unix(now()) - datetime2unix(now(UTC))))
+        starttime = finishtime - Dates.Second(round(Int64, numvalues/fs))
 
     finally
         #close file
