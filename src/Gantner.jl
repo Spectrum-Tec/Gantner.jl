@@ -1,6 +1,8 @@
 module Gantner
 
 using Dates
+using LoopVectorization
+
 #using Infiltrator
 
 export gantnerread, gantnerinfo, gantnermask, Timelimits
@@ -77,10 +79,10 @@ function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} =
         push!(chanlegendtext, gantChanName(gConnection, i+1))
         #read channel data
         data[:,i] = gantChanDataRead(gClient, gConnection, i+1)
-        #for (j, value) in enumerate(data)
-        #    global data[j, i] = scale[i] * value;
-        #end
-        data[:,i] .*= scale[i]
+        @turbo for j in 1:numvalues
+            data[j, i] *= scale[i]
+        end
+        # data[:,i] .*= scale[i]
     end
         
     finally
@@ -155,10 +157,10 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
 
             #read channel data
             data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)
-            #for (j, value) in enumerate(data[:,i])
-            #    global data[j, i] = scale[i] * value;
-            #end
-            data[:,i] .*= scale[i]
+            @turbo for j in 1:numvalues
+                data[j, i] *= scale[i]
+            end
+            # data[:,i] .*= scale[i]
         end
 
     finally
@@ -241,11 +243,10 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
         data = gantChanDataRead(gClient, gConnection, channel + 1)[indexst:indexfin]
         # @infiltrate
         if scale != 1.0
-            # the for loop should be faster than broadcasting but I think the global slows it down
-            #@inbounds for (j, value) in enumerate(data)
-            #    global data[j] = scale * value;
-            #end
-            data .*= scale
+            @turbo for j in 1:numvalues
+                data[j] *= scale
+            end
+            #data .*= scale
         end
         
     finally

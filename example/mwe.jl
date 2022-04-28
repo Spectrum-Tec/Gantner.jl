@@ -1,14 +1,19 @@
 using BenchmarkTools
 using Revise
+using LoopVectorization
+
+# Some trials to ensure that the scaling algorithm is as efficient as possible
+# broadcasting is two orders of magnitude faster
 
 n = 2_000_000
+data=rand(n)
+sc = 0.999999999999
 function scaletryglobalfor(scale)
     try
         # open file to obtain data
-        global data=rand(n)
      
-        @inbounds for (j, value) in enumerate(data)
-            global data[j] = scale * value;
+        @inbounds for (i, value) in enumerate(data)
+            global data[i] = scale * value;
         end
 
     finally
@@ -18,32 +23,34 @@ function scaletryglobalfor(scale)
 end
 
 function scaleglobalfor(scale)
-    global data=rand(n)
     @inbounds for (i,value) in enumerate(data)
         global data[i] = scale * value
     end
     data
 end
 
-function scalefor(scale)
-    data=rand(n)
-    @inbounds for (i,value) in enumerate(data)
-        data[i] = scale * value
+function scalefor(datalocal, scale)
+    @inbounds for (i,value) in enumerate(datalocal)
+        datalocal[i] = scale * value
     end
-    data
+    datalocal
 end
 
-function scaledotfor(scale)
-    data=rand(n)
-    @inbounds for i in 1:length(data)
-        data[i] *= scale
+function scaledotfor(datalocal, scale)
+     @inbounds for i in 1:length(datalocal)
+        datalocal[i] *= scale
     end
-    data
+    datalocal
 end
 
+function scaledotforloopvectorized(datalocal, scale)
+    @turbo for i in 1:length(datalocal)
+       datalocal[i] *= scale
+   end
+   datalocal
+end
 
 function scaletryglobalbroadcast(scale)
-    global data=rand(n)
     try
         global data .*= scale
     finally
@@ -58,18 +65,18 @@ function scaleglobalbroadcast(scale)
     data
 end
 
-function scalebroadcast(scale)
-    data=rand(n)
-    data .*= scale
+function scalebroadcast(datalocal, scale)
+    datalocal .*= scale
 end
 
-@btime scaletryglobalfor(2.2);
-@btime scaleglobalfor(2.2);
-@btime scalefor(2.2);
-@btime scaledotfor(2.2);
-@btime scaletryglobalbroadcast(2.2);
-@btime scaleglobalbroadcast(2.2);
-@btime scalebroadcast(2.2);
+@btime a = scaletryglobalfor(sc); a[1]
+@btime a = scaleglobalfor(sc); a[1]
+@btime a = scalefor(data, sc); a[1]
+@btime a = scaledotfor(data, sc); a[1]
+@btime a = scaledotforloopvectorized(data, sc); a[1]
+@btime a = scaletryglobalbroadcast(sc); a[1]
+@btime a = scaleglobalbroadcast(sc); a[1]
+@btime a = scalebroadcast(data, sc); a[1]
 
 
 
