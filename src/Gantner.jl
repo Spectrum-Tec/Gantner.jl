@@ -22,33 +22,6 @@ struct Timelimits
     fin::Float64
 end
 
-# MWE for initializing variables to get rid of globals
-function trial()
-# initialize variables
-fs = 0.0
-ti = AbstractVector{Float64}
-data = Vector{Float64}
-
-try
-    # open file to read
-    numvalues = rand(100:200, 1)[1]  # number of values from file
-    fs = 512.0  # read from file
-
-    if rand(1:2,1)[1] == 1
-        ti = range(0, step=1/fs, length=numvalues) # generate lazy values
-    else
-        ti = collect(range(0, step=1/fs, length=numvalues)) # read actual values from file
-    end
-
-    data = rand(numvalues)
-finally 
-    #close file
-end
-return ti, data, fs
-end
-
-
-
 """
     gantnerread(filename :: String; scale :: Real = 1.0, lazytime :: Bool = true)
 Read all data channels of data in a Gantner *.dat file.
@@ -247,11 +220,12 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
             end
         else
             if lazytime  # simple fast calculation
-                indexst = ceil(Int, tl.st * fs)
-                indexfin = floor(Int, tl.fin * fs)
+                indexst = max(1, floor(Int, tl.st * fs + 1))
+                indexfin = min(numvaluesinfile, ceil(Int, tl.fin * fs + 1))
                 numvalues = indexfin - indexst + 1
-                ti = (indexst:indexfin)/fs
+                ti = (indexst-1:indexfin-1)/fs
             else  # more complex calcuation
+                ti = gantChanDataRead(gClient, gConnection, 1) # time data in column 1
                 indexst = findfirst(tl.st >= ti)
                 indexfin = findfirst(tl.fin >= ti)
                 numvalues = indexfin - indexst + 1
