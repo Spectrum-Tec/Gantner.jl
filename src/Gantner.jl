@@ -66,7 +66,6 @@ function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} =
     end
 
     fs = gantSampleRate(gConnection);
-    # global data = zeros(Float64, numvalues, numchannels-1)
     data = Array{Float64}(undef, numvalues, numchannels)
     if lazytime
         ti = range(0, step = 1.0/fs, length = numvalues)
@@ -75,19 +74,16 @@ function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} =
     end
 
     for i=1:numchannels
-        #read channel name
-        push!(chanlegendtext, gantChanName(gConnection, i+1))
-        #read channel data
-        data[:,i] = gantChanDataRead(gClient, gConnection, i+1)
+        push!(chanlegendtext, gantChanName(gConnection, i+1))  #read channel name
+        data[:,i] = gantChanDataRead(gClient, gConnection, i+1) #read channel data
         @turbo for j in 1:numvalues
             data[j, i] *= scale[i]
         end
-        # data[:,i] .*= scale[i]
+        # data[:,i] .*= scale[i]  # broadcast method
     end
         
     finally
-        #close file
-        gantCloseFile(gClient, gConnection)
+        gantCloseFile(gClient, gConnection)         #close file
     end
     return (ti, data, fs, chanlegendtext)
 end
@@ -121,8 +117,7 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
     data = Array{Float64}
     try
         gClient, gConnection = gantOpenFile(filename); # open file
-        #read number of channels
-        numchannels = length(channel)
+        numchannels = length(channel)   #read number of channels
         numchanneldat = gantChanNumRead(gConnection) - 1;
         numvalues = gantNumSamples(gClient, gConnection)
 
@@ -143,7 +138,6 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
 
         fs = gantSampleRate(gConnection);
         chanlegendtext = Vector{String}(undef, numchannels)
-        # global data = zeros(Float64, numvalues, numchannels-1)
         data = Array{Float64}(undef, numvalues, numchannels)
         if lazytime
             ti = range(0, step = 1.0/fs, length = numvalues)
@@ -151,12 +145,9 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
             ti = gantChanDataRead(gClient, gConnection, 1) # time data assumed in column 1
         end
 
-        for (i, ii) in enumerate(channel)
-            #read channel name
-            chanlegendtext[i] = gantChanName(gConnection, ii+1)
-
-            #read channel data
-            data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)
+        for (i, ii) in enumerate(channel)    
+            chanlegendtext[i] = gantChanName(gConnection, ii+1)    #read channel name
+            data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)    #read channel data
             @turbo for j in 1:numvalues
                 data[j, i] *= scale[i]
             end
@@ -235,13 +226,9 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
             end
         end
 
-        #read channel name
-        chanlegendtext = gantChanName(gConnection, channel + 1)
-
-        #read channel data
+        chanlegendtext = gantChanName(gConnection, channel + 1)         #read channel name
         # using @view in the following line saves half the memory but creates a SubArray (not sure of the implications)
-        data = gantChanDataRead(gClient, gConnection, channel + 1)[indexst:indexfin]
-        # @infiltrate
+        data = gantChanDataRead(gClient, gConnection, channel + 1)[indexst:indexfin]        #read channel data
         if scale != 1.0
             @turbo for j in 1:numvalues
                 data[j] *= scale
