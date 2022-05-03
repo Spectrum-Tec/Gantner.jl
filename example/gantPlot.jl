@@ -6,10 +6,10 @@ matlab file comment out those sections.
 # Pkg.add("Plots")  # uncomment for first run
 # Pkg.add("Revise")  # uncomment for first run
 # using Revise
-using MAT
-using HDF5
-using Plots
 using Gantner
+using HDF5
+using MAT
+using Plots
 
 # load file data
 name = joinpath(@__DIR__, "data.dat")

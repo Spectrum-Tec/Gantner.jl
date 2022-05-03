@@ -1,7 +1,8 @@
 module Gantner
 
+using Base.Threads
 using Dates
-using LoopVectorization
+# using LoopVectorization  # to use this replace @threads with @turbo not sure which is better
 
 #using Infiltrator
 
@@ -76,7 +77,7 @@ function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} =
     for i=1:numchannels
         push!(chanlegendtext, gantChanName(gConnection, i+1))  #read channel name
         data[:,i] = gantChanDataRead(gClient, gConnection, i+1) #read channel data
-        @turbo for j in 1:numvalues
+        @threads for j in 1:numvalues
             data[j, i] *= scale[i]
         end
         # data[:,i] .*= scale[i]  # broadcast method
@@ -148,7 +149,7 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
         for (i, ii) in enumerate(channel)    
             chanlegendtext[i] = gantChanName(gConnection, ii+1)    #read channel name
             data[:,i] = gantChanDataRead(gClient, gConnection, ii+1)    #read channel data
-            @turbo for j in 1:numvalues
+            @threads for j in 1:numvalues
                 data[j, i] *= scale[i]
             end
             # data[:,i] .*= scale[i]
@@ -230,7 +231,7 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
         # using @view in the following line saves half the memory but creates a SubArray (not sure of the implications)
         data = gantChanDataRead(gClient, gConnection, channel + 1)[indexst:indexfin]        #read channel data
         if scale != 1.0
-            @turbo for j in 1:numvalues
+            @threads for j in 1:numvalues
                 data[j] *= scale
             end
             #data .*= scale

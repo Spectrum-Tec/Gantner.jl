@@ -1,6 +1,7 @@
+using Base.Threads  # 5% faster than loop vectorization
 using BenchmarkTools
-using Revise
 using LoopVectorization
+using Revise
 
 # Some trials to ensure that the scaling algorithm is as efficient as possible
 # broadcasting is two orders of magnitude faster
@@ -45,6 +46,13 @@ end
 
 function scaledotforloopvectorized(datalocal, scale)
     @turbo for i in 1:length(datalocal)
+       datalocal[i] *= scale
+   end
+   datalocal
+end
+
+function scaledotforthreads(datalocal, scale)
+    @threads for i in 1:length(datalocal)
        datalocal[i] *= scale
    end
    datalocal

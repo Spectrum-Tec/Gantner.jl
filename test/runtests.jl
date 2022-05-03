@@ -1,4 +1,6 @@
-using Test, Gantner, Dates
+using Dates
+using Gantner
+using Test
 
 name = joinpath(@__DIR__, "..", "example", "data.dat")
 
