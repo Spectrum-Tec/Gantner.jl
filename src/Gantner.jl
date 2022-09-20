@@ -6,7 +6,7 @@ using Dates
 
 #using Infiltrator
 
-export gantnerread, gantnerinfo, gantnermask, Timelimits
+export gantnerread, gantnerinfo, gantnermask, TimeLimits
 include("read_exact.jl")
 
 #=
@@ -163,13 +163,13 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
 end
 
 """
-gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Timelimits,Nothing}=nothing, lazytime::Bool = true)
+gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{TimeLimits,Nothing}=nothing, lazytime::Bool = true)
 Read specified data channel (one channel) of data in a Gantner *.dat file.
 
 channel - is the channel number to read the data from.  When channel is 0 the gantner time data is returned in data.
 The first channel of the .dat file is time data. This is ignored by default and returned in ti if lazytime=false.
 scale - convert data in volts in .dat file to EU
-tl - optional time limits of data to read. Ex. tl = Timelimits(5.0, 15.0); for all data don't set it.
+tl - optional time limits of data to read. Ex. tl = TimeLimits(5.0, 15.0); for all data don't set it.
 If lazytime = false this data will be read and returned as ti.  
 If lazytime = true this data will be reconstructed.
 
@@ -182,7 +182,7 @@ chanlegendtext - the legend text associated with each channel Vector{String}
 This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
-function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Timelimits,Nothing}=nothing, lazytime::Bool = true)
+function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{TimeLimits,Nothing}=nothing, lazytime::Bool = true)
     # if tl = nothing then all the data is returned
     gClient = gConnection = 0
     fs = 0.0
