@@ -20,7 +20,7 @@ Optional partial data reads has been implemented for single channel reads.  Use 
 for adding this capability for all channel or multiple channel reading of data if required.
 =#
 
-struct Timelimits
+struct TimeLimits
     st::Float64
     fin::Float64
 end
@@ -292,6 +292,9 @@ end
 take the input data which has a digitial tach channel embedded within it.  This will extract the information from the specified bit and return this information.
 Assume data is a Vector{Float64} or Array{Float64,1}
 bit - the bit number from the least significant bit that contains the data
+
+This functionality has been renamed tachmask and moved to TachProcessing module.
+Eventually it will be deprecated from here.  All cases of gantnermask should now be renamed.
 """
 function gantnermask(data::Vector{Float64}, bit::Integer)
     mask = one(UInt) << (bit - 1)
