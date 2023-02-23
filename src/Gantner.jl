@@ -91,7 +91,6 @@ end
 
 """
     gantnerread(filename :: String; channel:: AbstractVector{Int}, scale :: Real = 1.0, lazytime :: Bool = true)
-
 Read specified data channels of data in a Gantner *.dat file.
 
 The first channel of the .dat file is time data. This is ignored by default and returned in ti if lazytime=false.
