@@ -20,9 +20,9 @@ Optional partial data reads has been implemented for single channel reads.  Use 
 for adding this capability for all channel or multiple channel reading of data if required.
 =#
 
-struct TimeLimits
-    st::Float64
-    fin::Float64
+struct TimeLimits{T<:Float64}
+    st::T
+    fin::T
 end
 
 """
