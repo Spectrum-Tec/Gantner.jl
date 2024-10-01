@@ -48,19 +48,19 @@ end
     @test chanlegendtext == "1st MUX AI_03"
     
     # check gantnerread, where only one channel is partially read and scale factor is used
-    tl = TimeLimits(5.0, 15.0)
+    tl = (5.0, 15.0)
     (ttl, datatl, fs, chanlegendtext) = gantnerread(name, 5, scale=2.0, tl=tl)
     @test length(ttl) == 100_001
     @test typeof(datatl) == Vector{Float64}
     @test length(datatl) == 100_001
-    @test ttl[begin] == tl.st
-    @test ttl[end] == tl.fin
+    @test ttl[begin] == tl[1]
+    @test ttl[end] == tl[2]
     @test datatl[5] ≈ 0.02257087081670761
     @test data[50005] == datatl[5]
     @test chanlegendtext == "1st MUX AI_03"
     
     # check gantnerread, where only one channel is partially read and scale factor is 1.0
-    tl = TimeLimits(5.0, 15.0)
+    tl = [5.0, 15.0]
     (t, data, fs, chanlegendtext) = gantnerread(name, 5, scale=1.0, tl=tl)
     @test length(t) == 100_001
     @test typeof(data) == Vector{Float64}

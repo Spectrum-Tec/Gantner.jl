@@ -6,24 +6,23 @@ using Dates
 
 #using Infiltrator
 
-export gantnerread, gantnerinfo, gantnermask, TimeLimits
+export gantnerread, gantnerinfo, gantnermask
 include("read_exact.jl")
 
 #=
+See https://knowledge.gantner-instruments.com/how-to-stream-data-to-matlab for Matlab implementation.
+This is based on the giutility that Matlab Mex files also call.
+
 This function implements the read_exact.mex functionality to read a Gantner created .dat file.  
 It utilizes the Julia ccall command to use the functionality of the giutility.dll file.  As this
-is a windows specific file, this utility only works for Windows operating system.
+is a windows specific file, this utility has only been tested for Windows but should also work 
+under Linux.
 
-Additional read_exact.mex functionality can be added as required
+Additional read_exact.mex functionality can be added as required.
 
 Optional partial data reads has been implemented for single channel reads.  Use this as a base
 for adding this capability for all channel or multiple channel reading of data if required.
 =#
-
-struct TimeLimits{T<:Float64}
-    st::T
-    fin::T
-end
 
 """
     gantnerread(filename :: String; scale :: Real = 1.0, lazytime :: Bool = true)
@@ -38,7 +37,7 @@ If lazytime = true this data will be reconstructed  (The default)
 Program returns 
 ti - time of sample;
 data - Array of all the data channels;
-fs - sampling rate [Hz]
+fs - sampling rate [Hz];
 chanlegendtext - the legend text associated with each channel Vector{String}
 
 This is a subset of the read_exact.c which is the base of the read_exact mex
@@ -162,13 +161,13 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
 end
 
 """
-gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{TimeLimits,Nothing}=nothing, lazytime::Bool = true)
+gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Vector{T},Tuple{T, T}}=(0.0,Inf), lazytime::Bool = true) where  T<:AbstractFloat
 Read specified data channel (one channel) of data in a Gantner *.dat file.
 
 channel - is the channel number to read the data from.  When channel is 0 the gantner time data is returned in data.
 The first channel of the .dat file is time data. This is ignored by default and returned in ti if lazytime=false.
 scale - convert data in volts in .dat file to EU [EU/V]
-tl - optional time limits of data to read. Ex. tl = TimeLimits(5.0, 15.0); for all data don't set it.
+tl - optional time limits of data to read. Ex. tl = (5.0, 15.0); for all data don't set it.
 If lazytime = false this data will be read and returned as ti.  
 If lazytime = true this data will be reconstructed.
 
@@ -181,8 +180,8 @@ chanlegendtext - the legend text associated with each channel Vector{String}
 This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
-function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{TimeLimits,Nothing}=nothing, lazytime::Bool = true)
-    # if tl = nothing then all the data is returned
+function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Vector{T},Tuple{T, T}}=(0.0, Inf), lazytime::Bool = true) where T<:AbstractFloat
+    # if tl = (0.0, Inf) the default, then all the data is returned
     gClient = gConnection = 0
     fs = 0.0
     chanlegendtext = ""
@@ -202,7 +201,7 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
             error("Specified channel not in data file")
         end
 
-        if tl === nothing  # all data in file
+        if tl[1] == 0.0 && tl[2] == Inf  # all data in file
             indexst = 1
             indexfin = numvaluesinfile
             numvalues = numvaluesinfile
@@ -213,14 +212,14 @@ function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 
             end
         else
             if lazytime  # simple fast calculation
-                indexst = max(1, floor(Int, tl.st * fs + 1))
-                indexfin = min(numvaluesinfile, ceil(Int, tl.fin * fs + 1))
+                indexst = max(1, floor(Int, tl[1] * fs + 1))
+                indexfin = min(numvaluesinfile, ceil(Int, tl[2] * fs + 1))
                 numvalues = indexfin - indexst + 1
                 ti = (indexst-1:indexfin-1)/fs
             else  # more complex calcuation
                 ti = gantChanDataRead(gClient, gConnection, 1) # time data in column 1
-                indexst = findfirst(tl.st >= ti)
-                indexfin = findfirst(tl.fin >= ti)
+                indexst = findfirst(tl[1] >= ti)
+                indexfin = findfirst(tl[2] >= ti)
                 numvalues = indexfin - indexst + 1
                 ti = ti[indexst:indexfin]
             end
