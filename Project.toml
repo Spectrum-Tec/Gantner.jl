@@ -1,7 +1,7 @@
 name = "Gantner"
 uuid = "f686b519-92d3-45a6-8ed5-da98460f9b0d"
 authors = ["jakez "]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
