@@ -2,9 +2,6 @@ module Gantner
 
 using Base.Threads
 using Dates
-# using LoopVectorization  # to use this replace @threads with @turbo not sure which is better
-
-#using Infiltrator
 
 export gantnerread, gantnerinfo, gantnermask
 include("read_exact.jl")
