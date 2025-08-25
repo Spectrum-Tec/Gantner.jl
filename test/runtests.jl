@@ -2,6 +2,8 @@ using Dates
 using Gantner
 using Test
 
+include("Aqua.jl")
+
 name = joinpath(@__DIR__, "..", "example", "data.dat")
 
 @testset "gantnerinfo" begin
@@ -34,7 +36,14 @@ end
     @test t == 0.0:0.0001:19.9999
     @test data[2,5] ≈ 5.0 * 0.001806761370971799
     @test chanlegendtext == ["Trig Condition", "DI_01a", "FI_01a", "2nd MUX AI_01", "1st MUX AI_03"]
-    
+
+     #check gantnerread for all channels with scaling Int
+    scalefactors = 5
+    (t, data, fs, chanlegendtext) = gantnerread(name, scale=scalefactors)
+    @test t == 0.0:0.0001:19.9999
+    @test data[2,5] ≈ 5.0 * 0.001806761370971799
+    @test chanlegendtext == ["Trig Condition", "DI_01a", "FI_01a", "2nd MUX AI_01", "1st MUX AI_03"]  
+
     # check gantnerread where the sampling time is read, rather than recreated
     (t, data, fs, chanlegendtext) = gantnerread(name; lazytime = false)
     @test t[1] ≈ 44210.79703523496

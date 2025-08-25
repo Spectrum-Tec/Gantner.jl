@@ -4,7 +4,7 @@ using Base.Threads
 using Dates
 
 export gantnerread, gantnerinfo, gantnermask
-include("read_exact.jl")
+include(joinpath(@__DIR__, "read_exact.jl"))
 
 #=
 See https://knowledge.gantner-instruments.com/how-to-stream-data-to-matlab for Matlab implementation.
@@ -22,7 +22,7 @@ for adding this capability for all channel or multiple channel reading of data i
 =#
 
 """
-    gantnerread(filename :: String; scale :: Real = 1.0, lazytime :: Bool = true)
+    gantnerread(filename::String; scale::Union{AbstractVector{T},T} = 1.0, lazytime::Bool = true) where T<:Real
 Read all data channels of data in a Gantner *.dat file.
 
 The first channel of the .dat file is time data. This is ignored by default and returned in ti if lazytime=false.
@@ -40,7 +40,7 @@ chanlegendtext - the legend text associated with each channel Vector{String}
 This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
-function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} = 1.0, lazytime::Bool = true)
+function gantnerread(filename::String; scale::Union{AbstractVector{T},T} = 1.0, lazytime::Bool = true) where T<:Real
     gClient = gConnection = 0
     fs = 0.0
     chanlegendtext = Vector{String}()
@@ -86,7 +86,7 @@ function gantnerread(filename::String; scale::Union{Vector{<:Float64},Float64} =
 end
 
 """
-    gantnerread(filename :: String; channel:: AbstractVector{Int}, scale :: Real = 1.0, lazytime :: Bool = true)
+    gantnerread(filename::String, channel::AbstractVector{<:Integer}; scale::Union{AbstractVector{T},T} = 1.0, lazytime::Bool = true) where T<:Real
 Read specified data channels of data in a Gantner *.dat file.
 
 The first channel of the .dat file is time data. This is ignored by default and returned in ti if lazytime=false.
@@ -105,7 +105,7 @@ chanlegendtext - the legend text associated with each channel Vector{String}
 This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
-function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Union{Vector{<:Float64},Float64} = 1.0, lazytime::Bool = true)
+function gantnerread(filename::String, channel::AbstractVector{<:Integer}; scale::Union{AbstractVector{T},T} = 1.0, lazytime::Bool = true) where T<:Real
     gClient = gConnection = 0
     fs = 0.0
     chanlegendtext = Vector{String}()
@@ -158,7 +158,7 @@ function gantnerread(filename::String, channel::AbstractVector{Int}; scale::Unio
 end
 
 """
-gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Vector{T},Tuple{T, T}}=(0.0,Inf), lazytime::Bool = true) where  T<:AbstractFloat
+gantnerread(filename::String, channel::Integer; scale::Real = 1.0, tl::Union{Vector{T},Tuple{T, T}}=(0.0, Inf), lazytime::Bool = true) where T<:Real
 Read specified data channel (one channel) of data in a Gantner *.dat file.
 
 channel - is the channel number to read the data from.  When channel is 0 the gantner time data is returned in data.
@@ -177,7 +177,7 @@ chanlegendtext - the legend text associated with each channel Vector{String}
 This is a subset of the read_exact.c which is the base of the read_exact mex
 file used for matlab.  This subset is only for reading data from a file.
 """
-function gantnerread(filename::String, channel::Integer; scale::AbstractFloat = 1.0, tl::Union{Vector{T},Tuple{T, T}}=(0.0, Inf), lazytime::Bool = true) where T<:AbstractFloat
+function gantnerread(filename::String, channel::Integer; scale::Real = 1.0, tl::Union{Vector{T},Tuple{T, T}}=(0.0, Inf), lazytime::Bool = true) where T<:Real
     # if tl = (0.0, Inf) the default, then all the data is returned
     gClient = gConnection = 0
     fs = 0.0
