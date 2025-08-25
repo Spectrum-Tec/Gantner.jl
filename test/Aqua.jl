@@ -1,3 +1,5 @@
 using Aqua
 
-Aqua.test_all(Gantner; deps_compat=(ignore=[:Dates],))
+@testset "Aqua.jl" begin
+    Aqua.test_all(Gantner; deps_compat=(ignore=[:Dates],))
+end
