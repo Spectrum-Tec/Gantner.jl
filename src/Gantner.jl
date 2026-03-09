@@ -1,10 +1,10 @@
 module Gantner
 
 using Base.Threads
-using Dates
+using Dates: Dates, UTC, datetime2unix, now, unix2datetime
 
 export gantnerread, gantnerinfo, gantnermask
-include(joinpath(@__DIR__, "read_exact.jl"))
+include("read_exact.jl")
 
 #=
 See https://knowledge.gantner-instruments.com/how-to-stream-data-to-matlab for Matlab implementation.
